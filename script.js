@@ -1,6 +1,6 @@
 const enable_interaction = true;
-var get_mouse_pos = false;
-var get_touch_pos = false;
+var scroll_pos = 0;
+var scrolling = false;
 
 var A = 50;
 var r = 50;
@@ -11,12 +11,19 @@ var M;
 var t = 0;
 var rate = .02;
 
+var W;
+var H;
+
 const fps = 60;
 var fpsInterval, startTime, now, then, elapsed;
 
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
+var body = document.getElementById('body');
+var body_height = 20*window.innerHeight;
 
+body.style = `height: ${body_height}px`;
+window.scrollTo(0,0);
 
 startAnimating(fps);
 
@@ -65,6 +72,8 @@ function startAnimating(fps) {
     window.onresize = function(e) {
         W = canvas.width = window.innerWidth;
         H = canvas.height = window.innerHeight;
+        body_height = 2*H;
+        body.style = `height: ${body_height}px`;
       }
     
     animate();
@@ -84,55 +93,31 @@ function startAnimating(fps) {
         draw();     
         
      }
+     
 
      if(enable_interaction) {
-        canvas.addEventListener('mousedown', e => {
-            get_mouse_pos = true;
-            getMousePosition(canvas, e)
-        });
+        window.addEventListener('scroll', function(e) {
+            scroll_pos = window.scrollY;
           
-        canvas.addEventListener('mouseup', e => {
-            get_mouse_pos = false;
-        });
-      
-        canvas.addEventListener('mousemove', function(e) {
-            if(get_mouse_pos) {
-                getMousePosition(canvas, e)
-          }
-        })
-        
-        canvas.addEventListener('touchstart', function(e) {
-            getTouchPosition(canvas,e);
-            event.preventDefault();
-        }, false);
+            if (!scrolling) {
+              window.requestAnimationFrame(function() {
+                scroll_action(scroll_pos);
+                scrolling = false;
+              });
           
-        canvas.addEventListener('touchend', function(e) {
-     
-        }, false);
-          
-        canvas.addEventListener('touchmove', function(e) {
-            getTouchPosition(canvas,e);
-            event.preventDefault();
-        }, false);
-    }
+              scrolling = true;
+            }
+          });
+     }
    
  }
 
-function getMousePosition(canvas, event) {
-    interaction(canvas,event)
-}
 
-function getTouchPosition(canvas, event) {
-    var event = event.touches[0];
-    interaction(canvas,event)
-}
+function scroll_action(scroll_pos) {
 
-function interaction(canvas, event) {
+  y_scroll = scroll_pos/(body_height - H);
 
-    mouse_x = event.clientX/canvas.width;
-    mouse_y = event.clientY/canvas.height;
-
-    A = 50 + 50*mouse_y;
-    rate = .02 + .8*mouse_y;
-
+  A = 50 + 50*y_scroll;
+  rate = .02 + .8*y_scroll;
+  
 }
