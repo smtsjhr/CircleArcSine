@@ -37,7 +37,7 @@ function draw() {
     ctx.fillRect(0, 0, W, H);
 
     N = s*(W/(2*A) + 2);
-    M = W/h + 4;
+    M = H/h + 4;
 
     for (let j = -1; j < M; j++) {
         for(let i = 0; i < N; i++){
