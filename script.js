@@ -1,44 +1,36 @@
 const enable_interaction = true;
-var scroll_pos = 0;
-var scrolling = false;
+let scrollX = 0;
+let scroll_width;
+let scroll_height;
+let scrollY = 0;
+let scrolling = false;
 
-var A = 50;
-var r = 50;
-var s = 25;
-var h = 2*r;
-var N;
-var M; 
-var t = 0;
-var rate = .02;
+let A = 50;
+let r = 50;
+let s = 25;
+let h = 2*r;
+let N;
 
-var W;
-var H;
+let W;
+let H;
+let M; 
+
+let t = 0;
+let rate = .02;
 
 const fps = 60;
-var fpsInterval, startTime, now, then, elapsed;
+let dt, startTime, now, then, delta;
 
-var canvas = document.getElementById('canvas');
-var ctx = canvas.getContext('2d');
-var body = document.getElementById('body');
-var body_height = 20*window.innerHeight;
-
-body.style = `height: ${body_height}px`;
-window.scrollTo(0,0);
-
-startAnimating(fps);
-
+let canvas = document.getElementById('canvas');
+let ctx = canvas.getContext('2d');
+let scroll_div = document.getElementById('scroll_div');
+let outer_wrapper = document.getElementById('outer_wrapper');
 
 function draw() {
-    
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-    
     ctx.fillStyle = 'rgba(0,0,0,1)';
     ctx.fillRect(0, 0, W, H);
-
     N = s*(W/(2*A) + 2);
     M = H/h + 4;
-
     for (let j = -1; j < M; j++) {
         for(let i = 0; i < N; i++){
             c =  Math.abs(50 + 150*(i%2));
@@ -49,75 +41,65 @@ function draw() {
             y_pos = h*j + Math.sin(a)*A;
             ctx.fillStyle = `rgba(${c},${c},${c},1)`;
             ctx.beginPath();
-            ctx.arc(x_pos,
-                    y_pos,
-                    r,
-                    0, 2*Math.PI);
+            ctx.arc(x_pos, y_pos, r, 0, 2*Math.PI);
             ctx.fill();
         }
     }
-    
     t += rate;
     t %= 2 ;
-    
 }
 
-
-function startAnimating(fps) {
-    
-    fpsInterval = 1000/fps;
+function animate(fps) {
+    dt = 1000/fps;
     then = window.performance.now();
     startTime = then;
-
-    window.onresize = function(e) {
-        W = canvas.width = window.innerWidth;
-        H = canvas.height = window.innerHeight;
-        body_height = 2*H;
-        body.style = `height: ${body_height}px`;
-      }
-    
-    animate();
+    throttle();
  }
  
- function animate(newtime) {
-    
-    
-     requestAnimationFrame(animate);
- 
+ function throttle(newtime) {
+     requestAnimationFrame(throttle);
      now = newtime;
-     elapsed = now - then;
- 
-     if (elapsed > fpsInterval) {
-        then = now - (elapsed % fpsInterval);
-     
+     delta = now - then;
+     if (delta > dt) {
+        then = now - (delta % dt);
         draw();     
-        
      }
-     
-
-     if(enable_interaction) {
-        window.addEventListener('scroll', function(e) {
-            scroll_pos = window.scrollY;
-          
-            if (!scrolling) {
-              window.requestAnimationFrame(function() {
-                scroll_action(scroll_pos);
-                scrolling = false;
-              });
-          
-              scrolling = true;
-            }
-          });
-     }
-   
  }
 
-
-function scroll_action(scroll_pos) {
-
-  y_scroll = scroll_pos/(body_height - H);
-
-  A = 50 + 50*y_scroll;
-  rate = .02 + .8*y_scroll;
-  
+if(enable_interaction) {
+    scroll_div.addEventListener('scroll', function(e) {
+        scrollX = scroll_div.scrollLeft;
+        scrollY = scroll_div.scrollTop;
+        if (!scrolling) {
+            window.requestAnimationFrame(function() {
+            scroll_action(scrollX, scrollY);
+            scrolling = false;
+        });
+        scrolling = true;
+        }
+    });
 }
+
+function scroll_action(scrollX, scrollY) {
+  x_scroll = scrollX/(scroll_width - W);
+  y_scroll = scrollY/(scroll_height - H);
+  A = 50 + 20*x_scroll;
+  rate = .02 + 0.2*y_scroll;  
+}
+
+function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    scroll_width = 2*W;
+    scroll_height = 4*H;
+    outer_wrapper.style.width = `${2*W}px`;
+    outer_wrapper.style.height = `${4*H}px`;
+}
+
+window.onresize = function(e) {
+    resize();
+}
+
+resize();
+
+animate(fps);
